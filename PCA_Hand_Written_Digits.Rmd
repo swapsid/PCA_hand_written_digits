@@ -1,0 +1,102 @@
+
+Section 1: Principal Component Analysis(PCA)
+
+Task 1: Given the dataset of Pen-Based Recognition of Handwritten Digits, we have 16 numeric features columns representing the shape of the digit from 0 to 9. Our first task is to find the two principal components which represent a substantial amount of the variance in the data given. Thus, we will first load the dataset and perform PCA. Principal Component Analysis helps in reducing the dimensionality of the features in a dataset by transforming the set of feature variables into smaller components which depicts the information of the larger dataset. We will also be renaming the feature columns as V1,V2,V3, so on and so forth, along with our class value as Type.
+
+```{r}
+library(dplyr)
+library(FactoMineR)
+
+pendigits <- read.csv("C:\\Users\\LENOVO\\Desktop\\dv 1\\pendigits.csv", header = F)
+pendigits_data <- colnames(pendigits) <- c('V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15','V16', 'Type')
+
+dplyr::select(pendigits, -Type) %>% 
+  PCA(graph = FALSE) -> pendigits_data_PCA
+
+```
+
+Task 2: Adding scree plot and loadings plot 
+
+We will now draw scree plot which will help us to view the variance of the data and a loading plot which will display the relationship between the variables and the principle components. We can see that nearly 50% of the variance in the data set is explained by the first two principal components. This means that a 2D scatter plot of these two components should show good separation of the points
+
+```{r}
+library(factoextra)
+
+scree_plot <- fviz_screeplot(pendigits_data_PCA, choice="variance", addlabels = TRUE,)
+scree_plot 
+
+```
+Task 3: Now we will prepare a loading plot which we help us in relating the larger dataset to the principal components. Through the loading plot we will be to visualize which feature variables in our dataset are shaping the principal components and by what proportion. The loading values lie between the range of -1 and 1. The values close to -1 or 1 points that the variable strongly influences the component whereas values close to 0 means a weak influence to the component. 
+  Thus we can observe that V9, V10, V11 strongly influence the PC2 in our dataset whereas  V6, V4, V3 and V5 influence the PC1 strongly. V8 influence both the components equally.
+
+```{r}
+loadings_plot <- fviz_pca_var(pendigits_data_PCA,col.var = "contrib", gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE) + xlab("PC1") + ylab("PC2") + ylim(c(-1,1.1))+ ggtitle("PCA Loadings Plot") + theme(
+    legend.box.background = element_rect(fill = "white", color = "white"),
+    legend.position = c(0.74, 1.01),
+    legend.direction = "horizontal",
+    legend.box.margin = margin(0.05, 0.05, 0.05, 0.05),
+    legend.key = element_rect(fill = "white"),)
+loadings_plot
+
+```
+
+
+Section 2: Custom Palette
+
+Task 4: The next task we are going to perform is building a custom palette. Qualitative color palettes are well-suited to representing categorical data because most of their variation is in the hue component. To prepare the palette, an open source tool iWantHue[https://medialab.github.io/iwanthue/] has been used. It is a very user-friendly tool which help us build custom color palette. We will use the option of colorblind friendly and also ensure that we do not use red and green in our palette. Through experimentation we set the HCL values and further to avoid similar colors hard force vector was used separately to get the hex values of the color palette. A vector is created with the hex values obtained and we used show_col from the scales library to display them.
+
+```{r}
+library(scales)
+#"#e73983"
+color_palette <- c("#EBC90A", "#FAE5AD", "#005202", "#a9d551", "#d55912", "#00b07b", "#9c3169", "#b75c40", "#6f4c85", "#ff96c0")
+
+show_col(color_palette, ncol = 10, cex_label = 0.5)
+
+```
+Section 3: ggplot2 Scatterplot
+
+Task 5: Scatterplots are very useful to shows the relationship between two numerical variables which here in our case will be the two principal components. We will be getting the results of principal componennts and using them to load it as first two columns of our dataset and then we will be creating a scatterplot with the two components. We have also removed the legend as it does not add any extra significance to the figure.
+
+```{r}
+library(ggrepel)
+
+PCA_results <- get_pca_ind(pendigits_data_PCA)
+#Fetching two columns of the resultant PCA matrix
+PCA_data <- PCA_results$coord[,c(1,2)]
+#Converting the table into dataframe
+PCA_data <- as.data.frame(PCA_data)
+#Changing column 1 and column 2 of the dataframe to PC1 and PC2 respectively
+names(PCA_data)[1] <- "PC1"
+names(PCA_data)[2] <- "PC2"
+PCA_data<- cbind(PCA_data, pendigits[17])
+names(PCA_data)[3] <- "Type"
+
+means_of_PCA <- PCA_data %>% group_by(Type) %>% summarise(PC1 = mean(PC1), PC2 = mean(PC2))
+
+scatter_plot <- ggplot(PCA_data, aes(x = PC1, y = PC2, color=as.factor(Type))) + geom_point(size=1, alpha = 0.8) + scale_fill_manual(values=color_palette) + scale_colour_manual(values = color_palette) + geom_label_repel(data = means_of_PCA, size = 4.5, aes(x = PC1, y = PC2, label = Type), alpha=2.2) + theme_minimal()  + theme(legend.position = "none")
+scatter_plot
+
+```
+Task 6: Plotting scatterplot of ellipse 
+
+Fitting an ellipse around the points of scatterplot can help us visualize the points more comfortably.
+
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+
+
+
+scatterPlot_with_ellipse<-ggplot(PCA_data, aes(x=PC1, y=PC2, color=as.factor(Type))) + geom_point(size=0.8, alpha = 0.4) + scale_fill_manual(values = color_palette) + scale_colour_manual(values = color_palette) + stat_ellipse(geom = "polygon",type = "t",size = 0.2, aes(fill = as.factor(Type)), alpha = 0.05) + geom_label_repel(data = means_of_PCA, size = 4.5, aes(x = PC1, y = PC2, label = Type), alpha=2.2) + theme_minimal() + theme(legend.position = "none")
+
+scatterPlot_with_ellipse
+
+```
+
+Reference:
+
+1. Interpret all statistics and graphs for Principal Components Analysis
+[https://support.minitab.com/en-us/minitab/18/help-and-how-to/modeling-statistics/multivariate/how-to/principal-components/interpret-the-results/all-statistics-and-graphs/#:~:text=Use%20the%20loading%20plot%20to,weak%20influence%20on%20the%20component]
+
+2. NUIG Data Visualization Course Material Unit 2: Visualising a Principal Component Analysis Using A Scatterplot and CVD simulation using the colorblindr package
