@@ -6,8 +6,8 @@ These new variables correspond to a linear combination of the original variables
 
 Example: As a simple example, if two variables are correlated, they can be replaced by a principle component.
 
-
-## About the Data:
+### Medium Article: [Principal Component Analysis on the Pen-Based Recognition of Handwritten Digits Data Set](https://medium.com/@swapsid_/principal-component-analysis-on-the-pen-based-recognition-of-handwritten-digits-data-set-1208a718f99)
+### About the Data:
 
 Pen-Based Recognition of Handwritten Digits Data Set. This data set has 10992 instances where each instance represents a numeric digit from '0' to '9' written on a Wacom digital handwriting tablet. The data was collected by F. Alimoglu et al., who collected handwriting samples of numeric digits from 44 users on an early Wacom handwriting table. The original research was concerned with the classification accuracy of the numeric digits.
 
